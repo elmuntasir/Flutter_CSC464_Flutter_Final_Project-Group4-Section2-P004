@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 import '../repositories/expense_repository.dart';
 import 'add_expense_screen.dart';
+import 'edit_expense_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -51,24 +52,66 @@ class HomeScreen extends StatelessWidget {
                         itemCount: expenses.length,
                         itemBuilder: (context, index) {
                           final expense = expenses[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                child: Icon(_getIconForCategory(expense.category)),
+                          return Dismissible(
+                            key: ValueKey(expense.id),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (direction) {
+                              return _showDeleteConfirmation(
+                                context,
+                                repository,
+                                expense,
+                              );
+                            },
+                            background: Container(
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              alignment: Alignment.centerRight,
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade600,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              title: Text(expense.name),
-                              subtitle: Text(
-                                  '${expense.category} • ${DateFormat('MMM dd, yyyy').format(expense.date)}'),
-                              trailing: Text(
-                                '\$${expense.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              child: const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  child: Icon(_getIconForCategory(expense.category)),
+                                ),
+                                title: Text(expense.name),
+                                subtitle: Text(
+                                    '${expense.category} • ${DateFormat('MMM dd, yyyy').format(expense.date)}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '\$${expense.amount.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      tooltip: 'Edit expense',
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => EditExpenseScreen(
+                                              expense: expense,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                onTap: () {
+                                  _showExpenseDetails(context, expense);
+                                },
                               ),
-                              onLongPress: () {
-                                _showDeleteDialog(context, repository, expense);
-                              },
                             ),
                           );
                         },
@@ -149,25 +192,100 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  void _showDeleteDialog(
-      BuildContext context, ExpenseRepository repository, Expense expense) {
-    showDialog(
+  Future<bool> _showDeleteConfirmation(
+    BuildContext context,
+    ExpenseRepository repository,
+    Expense expense,
+  ) async {
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Expense'),
         content: Text('Are you sure you want to delete "${expense.name}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              repository.deleteExpense(expense.id!);
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await repository.deleteExpense(expense.id!);
+      return true;
+    }
+
+    return false;
+  }
+
+  void _showExpenseDetails(BuildContext context, Expense expense) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  expense.name,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                _buildDetailRow('Amount', '\$${expense.amount.toStringAsFixed(2)}'),
+                _buildDetailRow('Category', expense.category),
+                _buildDetailRow('Date', DateFormat('MMM dd, yyyy').format(expense.date)),
+                _buildDetailRow(
+                  'Description',
+                  expense.description.trim().isEmpty
+                      ? 'No description provided'
+                      : expense.description,
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditExpenseScreen(expense: expense),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(value),
         ],
       ),
     );
