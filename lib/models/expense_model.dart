@@ -8,6 +8,7 @@ class Expense {
   final String description;
   final DateTime date;
   final DateTime? createdAt;
+  final String type; // 'income' or 'expense'
 
   Expense({
     this.id,
@@ -17,6 +18,7 @@ class Expense {
     required this.description,
     required this.date,
     this.createdAt,
+    this.type = 'expense',
   });
 
   factory Expense.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +31,7 @@ class Expense {
       description: data['description'] ?? '',
       date: (data['date'] as Timestamp).toDate(),
       createdAt: data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : null,
+      type: data['type'] ?? 'expense',
     );
   }
 
@@ -40,6 +43,9 @@ class Expense {
       'description': description,
       'date': Timestamp.fromDate(date),
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'type': type,
     };
   }
+
+  bool get isIncome => type == 'income';
 }

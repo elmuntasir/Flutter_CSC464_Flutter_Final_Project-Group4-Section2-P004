@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viva Preparation — Simple Expense Calculator</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0C0F1A;
+            --bg2: #111624;
+            --surface: #161B2E;
+            --border: rgba(255, 255, 255, 0.07);
+            --mint: #6DE8C3;
+            --coral: #FF9B9B;
+            --blue: #7EB8F7;
+            --yellow: #F7D97E;
+            --purple: #C5A9F5;
+            --text: #DDE4F0;
+            --dim: #6B7A99;
+            --code-bg: #090D18;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 260px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.2rem;
+            overflow-y: auto;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .sidebar-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--mint);
+            margin-bottom: 1.8rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-section-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--dim);
+            margin: 1.2rem 0 0.5rem 0.6rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.55rem 0.8rem;
+            border-radius: 8px;
+            color: var(--dim);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .nav-link.active {
+            color: var(--mint);
+            background: rgba(109, 232, 195, 0.08);
+            border-color: rgba(109, 232, 195, 0.15);
+        }
+
+        .nav-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--dim);
+            min-width: 18px;
+        }
+
+        /* ── MAIN ── */
+        .main {
+            margin-left: 260px;
+            padding: 0 3.5rem 6rem;
+            max-width: 1100px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            padding: 5rem 0 4rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 5rem;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--mint);
+            border: 1px solid rgba(109, 232, 195, 0.25);
+            padding: 5px 14px;
+            border-radius: 100px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-tag::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--mint);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 3.6rem;
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            color: #fff;
+            margin-bottom: 1.2rem;
+        }
+
+        h1 span {
+            color: var(--mint);
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: var(--dim);
+            max-width: 680px;
+            font-weight: 300;
+        }
+
+        /* ── SECTION ── */
+        section {
+            margin-bottom: 6rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--mint);
+            border: 1px solid rgba(109, 232, 195, 0.3);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ── CARDS ── */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .card p,
+        .card li {
+            font-size: 0.88rem;
+            color: #99A8C0;
+            line-height: 1.75;
+        }
+
+        .card ul {
+            padding-left: 1.2rem;
+        }
+
+        .card li {
+            margin-bottom: 0.3rem;
+        }
+
+        .card.accent-mint {
+            border-color: rgba(109, 232, 195, 0.2);
+        }
+
+        .card.accent-coral {
+            border-color: rgba(255, 155, 155, 0.2);
+        }
+
+        .card.accent-blue {
+            border-color: rgba(126, 184, 247, 0.2);
+        }
+
+        .card.accent-yellow {
+            border-color: rgba(247, 217, 126, 0.2);
+        }
+
+        .card.accent-purple {
+            border-color: rgba(197, 169, 245, 0.2);
+        }
+
+        .card h3.mint {
+            color: var(--mint);
+        }
+
+        .card h3.coral {
+            color: var(--coral);
+        }
+
+        .card h3.blue {
+            color: var(--blue);
+        }
+
+        .card h3.yellow {
+            color: var(--yellow);
+        }
+
+        .card h3.purple {
+            color: var(--purple);
+        }
+
+        /* ── CONCEPT BLOCK (full-width) ── */
+        .concept {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .concept h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: #fff;
+        }
+
+        .concept p {
+            font-size: 0.88rem;
+            color: #99A8C0;
+            line-height: 1.8;
+            margin-bottom: 0.7rem;
+        }
+
+        .concept p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ── CODE ── */
+        .code {
+            background: var(--code-bg);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 1.4rem 1.6rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            color: #ABB2BF;
+            line-height: 2;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .code .kw {
+            color: #C678DD;
+        }
+
+        .code .fn {
+            color: #61AFEF;
+        }
+
+        .code .cl {
+            color: #E5C07B;
+        }
+
+        .code .st {
+            color: #98C379;
+        }
+
+        .code .cm {
+            color: #4B5263;
+            font-style: italic;
+        }
+
+        .code .hl {
+            color: var(--mint);
+        }
+
+        .code .num {
+            color: #D19A66;
+        }
+
+        /* ── VIVA Q&A ── */
+        .viva {
+            background: rgba(255, 155, 155, 0.05);
+            border: 1px solid rgba(255, 155, 155, 0.18);
+            border-left: 3px solid var(--coral);
+            border-radius: 0 12px 12px 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.2rem 0;
+        }
+
+        .viva-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--coral);
+            margin-bottom: 0.6rem;
+        }
+
+        .viva .q {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .viva .a {
+            font-size: 0.86rem;
+            color: #99A8C0;
+            line-height: 1.8;
+        }
+
+        /* ── WHERE USED TAG ── */
+        .where {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-family: 'DM Mono', monospace;
+            background: rgba(126, 184, 247, 0.1);
+            color: var(--blue);
+            border: 1px solid rgba(126, 184, 247, 0.2);
+            padding: 3px 10px;
+            border-radius: 6px;
+            margin: 0.3rem 0.3rem 0 0;
+        }
+
+        /* ── TIP BOX ── */
+        .tip {
+            background: linear-gradient(135deg, rgba(109, 232, 195, 0.07), rgba(126, 184, 247, 0.07));
+            border: 1px solid rgba(109, 232, 195, 0.2);
+            border-radius: 14px;
+            padding: 1.6rem 1.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .tip-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--mint);
+            margin-bottom: 0.6rem;
+        }
+
+        .tip p {
+            font-size: 0.88rem;
+            color: #99A8C0;
+            line-height: 1.8;
+        }
+
+        /* ── LINK ── */
+        .yt-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--mint);
+            border: 1px solid rgba(109, 232, 195, 0.25);
+            padding: 6px 14px;
+            border-radius: 100px;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+
+        .yt-link:hover {
+            background: rgba(109, 232, 195, 0.1);
+        }
+
+        .yt-link svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--coral);
+            flex-shrink: 0;
+        }
+
+        /* ── FLOW DIAGRAM (pure CSS) ── */
+        .flow {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0;
+            margin: 1.2rem 0;
+        }
+
+        .flow-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text);
+        }
+
+        .flow-arrow {
+            font-size: 1rem;
+            color: var(--dim);
+            padding: 0 8px;
+        }
+
+        .flow-box.mint {
+            border-color: rgba(109, 232, 195, 0.3);
+            color: var(--mint);
+        }
+
+        .flow-box.blue {
+            border-color: rgba(126, 184, 247, 0.3);
+            color: var(--blue);
+        }
+
+        .flow-box.coral {
+            border-color: rgba(255, 155, 155, 0.3);
+            color: var(--coral);
+        }
+
+        .flow-box.yellow {
+            border-color: rgba(247, 217, 126, 0.3);
+            color: var(--yellow);
+        }
+
+        /* ── DIVIDER ── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 3rem 0;
+        }
+
+        /* ── PROGRESS INDICATOR ── */
+        .toc-progress {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            z-index: 300;
+        }
+
+        .toc-progress-bar {
+            height: 100%;
+            background: var(--mint);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media(max-width: 960px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 0 1.5rem 4rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.4rem;
+            }
+
+            .toc-progress {
+                left: 0;
+            }
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2A3350;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="toc-progress">
+        <div class="toc-progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">Viva Prep — Group 4</div>
+
+        <span class="nav-section-label">Foundation</span>
+        <a href="#s0" class="nav-link active"><span class="nav-num">00</span> App Architecture</a>
+        <a href="#s1" class="nav-link"><span class="nav-num">01</span> StatelessWidget</a>
+        <a href="#s2" class="nav-link"><span class="nav-num">02</span> StatefulWidget</a>
+        <a href="#s3" class="nav-link"><span class="nav-num">03</span> Widget Lifecycle</a>
+
+        <span class="nav-section-label">UI Elements Used</span>
+        <a href="#s4" class="nav-link"><span class="nav-num">04</span> Scaffold & AppBar</a>
+        <a href="#s5" class="nav-link"><span class="nav-num">05</span> Layout Widgets</a>
+        <a href="#s6" class="nav-link"><span class="nav-num">06</span> Forms & Inputs</a>
+        <a href="#s7" class="nav-link"><span class="nav-num">07</span> Navigation</a>
+        <a href="#s8" class="nav-link"><span class="nav-num">08</span> Dialogs & Overlays</a>
+
+        <span class="nav-section-label">Advanced Concepts</span>
+        <a href="#s9" class="nav-link"><span class="nav-num">09</span> StreamBuilder</a>
+        <a href="#s10" class="nav-link"><span class="nav-num">10</span> FutureBuilder</a>
+        <a href="#s11" class="nav-link"><span class="nav-num">11</span> Animations</a>
+        <a href="#s12" class="nav-link"><span class="nav-num">12</span> Theme System</a>
+
+        <span class="nav-section-label">Data & Dart</span>
+        <a href="#s13" class="nav-link"><span class="nav-num">13</span> Models & Classes</a>
+        <a href="#s14" class="nav-link"><span class="nav-num">14</span> Async / Await</a>
+        <a href="#s15" class="nav-link"><span class="nav-num">15</span> Collections & Dart</a>
+        <a href="#s16" class="nav-link"><span class="nav-num">16</span> Firebase Features</a>
+        <a href="#s17" class="nav-link"><span class="nav-num">17</span> Viva Cheatsheet</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- HERO -->
+        <header class="hero" id="top">
+            <div class="hero-tag">CSE464 · Group 4 · Section 2 · elmuntasir</div>
+            <h1>Flutter Viva<br><span>Encyclopedia</span></h1>
+            <p>Every Flutter concept, UI element, and Dart pattern actually used to build the Simple Expense Calculator
+                — explained clearly, with code from your own project and YouTube resources for each topic.</p>
+        </header>
+
+
+        <!-- ══════════════════════════════════════════════════
+       00 — APP ARCHITECTURE
+  ══════════════════════════════════════════════════ -->
+        <section id="s0">
+            <div class="section-header">
+                <span class="section-num">00</span>
+                <h2>App Architecture & Entry Point</h2>
+            </div>
+
+            <div class="concept">
+                <h3>How the app starts</h3>
+                <p>Every Flutter app begins at <code>main()</code> in <code>main.dart</code>. Before anything displays,
+                    we call <code>WidgetsFlutterBinding.ensureInitialized()</code> — this hooks Flutter's engine to the
+                    device before any plugin (like Firebase) tries to use native code. Then we call
+                    <code>Firebase.initializeApp()</code> asynchronously and only then call <code>runApp()</code>.</p>
+                <div class="code">
+                    <span class="kw">void</span> <span class="fn">main</span>() <span class="kw">async</span> {<br>
+                    &nbsp;&nbsp;<span class="cl">WidgetsFlutterBinding</span>.<span
+                        class="fn">ensureInitialized</span>(); <span class="cm">// ← MUST be first</span><br>
+                    &nbsp;&nbsp;<span class="kw">await</span> <span class="cl">Firebase</span>.<span
+                        class="fn">initializeApp</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;options: <span class="cl">DefaultFirebaseOptions</span>.currentPlatform,<br>
+                    &nbsp;&nbsp;);<br>
+                    &nbsp;&nbsp;<span class="fn">runApp</span>(<span class="kw">const</span> <span
+                        class="cl">MyApp</span>()); <span class="cm">// inflates the widget tree</span><br>
+                    }
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>Folder / Layer structure of your project</h3>
+                <p>Your project follows a clean Repository pattern with 3 layers:</p>
+                <div class="flow">
+                    <div class="flow-box mint">Screens (UI)</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box blue">Repositories (Data Access)</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box coral">Models (Plain Dart objects)</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box yellow">Firebase (Cloud)</div>
+                </div>
+                <p style="margin-top:1rem">Screens never talk to Firebase directly — they always go through a
+                    Repository. This keeps the code clean and testable. The teacher may ask "why did you separate
+                    repositories?" — this is your answer.</p>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What does <code>runApp()</code> do?</div>
+                <div class="a">A: It takes a widget and makes it the root of the widget tree. Flutter attaches it to the
+                    screen, and the framework starts calling <code>build()</code> on it.</div>
+            </div>
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why is <code>WidgetsFlutterBinding.ensureInitialized()</code> needed?</div>
+                <div class="a">A: Plugins like Firebase use platform channels to talk to Android/iOS native code. That
+                    channel must be ready before <code>await</code> calls. If you skip it, the app crashes with "binding
+                    not initialized".</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=8sAyPDLorek" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter App Structure Explained
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       01 — STATELESS WIDGET
+  ══════════════════════════════════════════════════ -->
+        <section id="s1">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2>StatelessWidget</h2>
+            </div>
+
+            <div class="concept">
+                <h3>What it is</h3>
+                <p>A widget that <strong>never changes after it's built</strong>. It has no internal state. Flutter
+                    builds it once (or rebuilds it only if the parent rebuilds it). If the data it depends on never
+                    changes during that widget's lifetime, use StatelessWidget.</p>
+                <div class="code">
+                    <span class="kw">class</span> <span class="cl">HomeScreen</span> <span class="kw">extends</span>
+                    <span class="cl">StatelessWidget</span> {<br>
+                    &nbsp;&nbsp;<span class="kw">const</span> <span class="cl">HomeScreen</span>({<span
+                        class="kw">super</span>.key});<br><br>
+                    &nbsp;&nbsp;<span class="cl">@override</span><br>
+                    &nbsp;&nbsp;<span class="cl">Widget</span> <span class="fn">build</span>(<span
+                        class="cl">BuildContext</span> context) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="cl">Scaffold</span>(...);<br>
+                    &nbsp;&nbsp;}<br>
+                    }
+                </div>
+                <p>In your project: <code>HomeScreen</code>, <code>MyApp</code>, and <code>_SplashScreen</code> are
+                    StatelessWidgets. They don't call <code>setState()</code>.</p>
+                <div>
+                    <span class="where">app.dart → MyApp</span>
+                    <span class="where">home_screen.dart → HomeScreen</span>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: HomeScreen reads from Firebase — how can it be Stateless?</div>
+                <div class="a">A: It uses <code>StreamBuilder</code> inside <code>build()</code>. The widget itself
+                    doesn't store anything — it just builds a StreamBuilder and lets that handle reactivity. The UI
+                    updates come from the Stream, not from <code>setState()</code>.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=wE7khMHHBmI" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Stateless vs Stateful Widget — Flutter
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       02 — STATEFUL WIDGET
+  ══════════════════════════════════════════════════ -->
+        <section id="s2">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2>StatefulWidget</h2>
+            </div>
+
+            <div class="concept">
+                <h3>What it is & why you need it</h3>
+                <p>A widget that has <em>mutable state</em>. When <code>setState()</code> is called, Flutter rebuilds
+                    only that widget (and its children). It's a two-class system: the Widget class (immutable, holds
+                    config) and the State class (mutable, holds data and <code>build()</code>).</p>
+                <div class="code">
+                    <span class="kw">class</span> <span class="cl">LoginScreen</span> <span class="kw">extends</span>
+                    <span class="cl">StatefulWidget</span> {<br>
+                    &nbsp;&nbsp;<span class="kw">const</span> <span class="cl">LoginScreen</span>({<span
+                        class="kw">super</span>.key});<br>
+                    &nbsp;&nbsp;<span class="cl">@override</span><br>
+                    &nbsp;&nbsp;<span class="cl">State</span>&lt;<span class="cl">LoginScreen</span>&gt; <span
+                        class="fn">createState</span>() =&gt; <span class="fn">_LoginScreenState</span>();<br>
+                    }<br><br>
+                    <span class="kw">class</span> <span class="cl">_LoginScreenState</span> <span
+                        class="kw">extends</span> <span class="cl">State</span>&lt;<span
+                        class="cl">LoginScreen</span>&gt; {<br>
+                    &nbsp;&nbsp;<span class="kw">bool</span> _isLoading = <span class="kw">false</span>; <span
+                        class="cm">// mutable state</span><br>
+                    &nbsp;&nbsp;<span class="kw">bool</span> _obscurePassword = <span class="kw">true</span>;<br><br>
+                    &nbsp;&nbsp;<span class="cl">@override</span><br>
+                    &nbsp;&nbsp;<span class="cl">Widget</span> <span class="fn">build</span>(<span
+                        class="cl">BuildContext</span> context) { ... }<br>
+                    }
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">StatefulWidgets in your project</h3>
+                    <ul>
+                        <li><code>LoginScreen</code> — loading state, password visibility, error message, animations
+                        </li>
+                        <li><code>RegisterScreen</code> — same + more fields</li>
+                        <li><code>AddExpenseScreen</code> — selected category, date, transaction type</li>
+                        <li><code>ProfileScreen</code> — all profile fields</li>
+                        <li><code>TransactionCard</code> — expand/collapse toggle</li>
+                    </ul>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">What triggers setState()?</h3>
+                    <ul>
+                        <li>Toggle password visibility: <code>_obscurePassword = !_obscurePassword</code></li>
+                        <li>After sign-in attempt starts: <code>_isLoading = true</code></li>
+                        <li>Tapping a category tile in AddExpense</li>
+                        <li>Tapping the transaction card to expand it</li>
+                        <li>Switching between Expense / Income type</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why did you use StatefulWidget for TransactionCard?</div>
+                <div class="a">A: Because it has a local <code>_isExpanded</code> boolean that controls whether the
+                    Edit/Delete buttons show. When the user taps the card, we call <code>setState()</code> to toggle it.
+                    This state is local to that card — it doesn't need to be shared — so StatefulWidget is the right
+                    choice.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=wE7khMHHBmI" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Stateful Widget Deep Dive
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       03 — WIDGET LIFECYCLE
+  ══════════════════════════════════════════════════ -->
+        <section id="s3">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2>Widget Lifecycle</h2>
+            </div>
+
+            <div class="concept">
+                <h3>The lifecycle methods — and exactly where you used them</h3>
+                <p>StatefulWidget States go through a series of lifecycle methods. You used three of them explicitly in
+                    your project:</p>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">initState()</h3>
+                    <p>Called <strong>once</strong> when the State object is first inserted into the tree. Perfect for
+                        one-time setup work: starting animations, pre-filling form fields.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">@override</span><br>
+                        <span class="kw">void</span> <span class="fn">initState</span>() {<br>
+                        &nbsp;&nbsp;<span class="kw">super</span>.<span class="fn">initState</span>(); <span
+                            class="cm">// ALWAYS call super first</span><br>
+                        &nbsp;&nbsp;_animController = <span class="cl">AnimationController</span>(...);<br>
+                        &nbsp;&nbsp;_animController.<span class="fn">forward</span>(); <span class="cm">// start on
+                            entry</span><br>
+                        }
+                    </div>
+                    <span class="where">login_screen.dart</span>
+                    <span class="where">add_expense_screen.dart</span>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">dispose()</h3>
+                    <p>Called when the widget is <strong>permanently removed</strong>. You MUST dispose controllers here
+                        to free memory and prevent memory leaks.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">@override</span><br>
+                        <span class="kw">void</span> <span class="fn">dispose</span>() {<br>
+                        &nbsp;&nbsp;_animController.<span class="fn">dispose</span>(); <span class="cm">// stop
+                            ticking</span><br>
+                        &nbsp;&nbsp;_emailController.<span class="fn">dispose</span>(); <span class="cm">// free text
+                            memory</span><br>
+                        &nbsp;&nbsp;_passwordController.<span class="fn">dispose</span>();<br>
+                        &nbsp;&nbsp;<span class="kw">super</span>.<span class="fn">dispose</span>(); <span class="cm">//
+                            ALWAYS call super last</span><br>
+                        }
+                    </div>
+                    <span class="where">login_screen.dart</span>
+                    <span class="where">profile_screen.dart</span>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>The <code>mounted</code> check — critical pattern in your code</h3>
+                <p>After an <code>await</code> (like a Firebase call), the widget might have been removed from the tree
+                    by the time the future resolves (user navigated away). Calling <code>setState()</code> on an
+                    unmounted widget throws an error. Your code guards against this:</p>
+                <div class="code">
+                    <span class="kw">try</span> {<br>
+                    &nbsp;&nbsp;<span class="kw">await</span> _authService.<span class="fn">signIn</span>(...);<br>
+                    } <span class="kw">finally</span> {<br>
+                    &nbsp;&nbsp;<span class="kw">if</span> (<span class="hl">mounted</span>) <span
+                        class="fn">setState</span>(() =&gt; _isLoading = <span class="kw">false</span>);<br>
+                    &nbsp;&nbsp;<span class="cm">// ↑ only update if still in the tree</span><br>
+                    }
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What happens if you forget to call dispose() on a TextEditingController?</div>
+                <div class="a">A: The controller keeps a listener attached to the widget. After the widget is removed,
+                    the controller still exists in memory and keeps listening — this is a memory leak. In long sessions
+                    the app uses more and more memory until it crashes or slows down.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=rlGCMvVeNTo" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Widget Lifecycle
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       04 — SCAFFOLD & APPBAR
+  ══════════════════════════════════════════════════ -->
+        <section id="s4">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2>Scaffold & AppBar</h2>
+            </div>
+
+            <div class="concept">
+                <h3>Scaffold — the page container</h3>
+                <p><code>Scaffold</code> implements the basic Material Design visual layout structure. It provides
+                    slots: <code>appBar</code>, <code>body</code>, <code>floatingActionButton</code>,
+                    <code>drawer</code>, etc. Every full screen in your app wraps its content in a Scaffold.</p>
+                <div class="code">
+                    <span class="cl">Scaffold</span>(<br>
+                    &nbsp;&nbsp;backgroundColor: <span class="kw">const</span> <span class="cl">Color</span>(<span
+                        class="num">0xFFF4F7FA</span>),<br>
+                    &nbsp;&nbsp;appBar: <span class="cl">AppBar</span>(title: <span class="cl">Text</span>(<span
+                        class="st">'Expense Tracker'</span>)),<br>
+                    &nbsp;&nbsp;body: <span class="cm">/* your content */</span>,<br>
+                    &nbsp;&nbsp;floatingActionButton: <span class="cl">FloatingActionButton</span>(...),<br>
+                    )
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-blue">
+                    <h3 class="blue">AppBar variations used</h3>
+                    <ul>
+                        <li><strong>Standard AppBar</strong> — HomeScreen, AddExpenseScreen (fixed at top)</li>
+                        <li><strong>SliverAppBar</strong> — ProfileScreen (collapses as you scroll, with expandedHeight:
+                            220)</li>
+                        <li><strong>No AppBar</strong> — LoginScreen, RegisterScreen (custom gradient full-screen
+                            layout)</li>
+                    </ul>
+                </div>
+                <div class="card accent-yellow">
+                    <h3 class="yellow">SliverAppBar — ProfileScreen</h3>
+                    <p>Used with <code>CustomScrollView</code> + <code>SliverToBoxAdapter</code>. The
+                        <code>flexibleSpace</code> holds the cover photo and profile pic. <code>pinned: true</code>
+                        keeps the collapsed bar visible when you scroll down. <code>expandedHeight: 220</code> defines
+                        how tall it is when fully open.</p>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is the difference between AppBar and SliverAppBar?</div>
+                <div class="a">A: A regular AppBar always stays the same height at the top. A SliverAppBar works inside
+                    a CustomScrollView and can expand to show large content (like a cover photo) that collapses down to
+                    a normal app bar as you scroll. We used it in ProfileScreen to show the cover image that shrinks
+                    into a small header.</div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is FloatingActionButton and where did you use it?</div>
+                <div class="a">A: It's a circular button that floats above the content, typically for a primary action.
+                    In HomeScreen we used it as the "+" button to navigate to AddExpenseScreen.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=C5lpPjoivaw" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Scaffold & AppBar Flutter Tutorial
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       05 — LAYOUT WIDGETS
+  ══════════════════════════════════════════════════ -->
+        <section id="s5">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2>Layout Widgets Used</h2>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">Column & Row</h3>
+                    <p><strong>Column</strong>: stacks children vertically. <strong>Row</strong>: places children
+                        horizontally. Both share the same properties:</p>
+                    <ul>
+                        <li><code>mainAxisAlignment</code> — how to align along the main axis (space between
+                            income/expense stats in the summary card)</li>
+                        <li><code>crossAxisAlignment</code> — how to align across the perpendicular axis</li>
+                    </ul>
+                    <span class="where">Every screen</span>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Container</h3>
+                    <p>The Swiss army knife. Used everywhere for custom painting. Accepts <code>decoration</code>
+                        (BoxDecoration), <code>padding</code>, <code>margin</code>, <code>width</code>,
+                        <code>height</code>. Your glass-card login panel is a <code>Container</code> with a
+                        semi-transparent <code>BoxDecoration</code> and <code>borderRadius</code>.</p>
+                    <span class="where">login_screen.dart → glass card</span>
+                    <span class="where">home_screen.dart → summary card</span>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">Expanded & Flexible</h3>
+                    <p><code>Expanded</code> makes a child fill remaining space inside a Row/Column. Used in the
+                        Income/Expense type-toggle buttons (<code>_buildTypeButton</code>) — each button gets exactly
+                        half the width by wrapping in <code>Expanded</code>.</p>
+                    <span class="where">add_expense_screen.dart → type buttons</span>
+                </div>
+                <div class="card accent-yellow">
+                    <h3 class="yellow">ListView.separated</h3>
+                    <p>Used in HomeScreen to display the transaction list. More efficient than <code>ListView</code>
+                        because it uses <strong>lazy loading</strong> — only builds items visible on screen.
+                        <code>separatorBuilder</code> adds <code>SizedBox(height: 12)</code> between items
+                        automatically.</p>
+                    <span class="where">home_screen.dart → transaction list</span>
+                </div>
+                <div class="card accent-purple">
+                    <h3 class="purple">GridView.builder</h3>
+                    <p>Used in AddExpenseScreen for the category tiles (3-column grid).
+                        <code>SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3)</code> sets 3 columns.
+                        <code>shrinkWrap: true</code> + <code>NeverScrollableScrollPhysics</code> lets it sit inside a
+                        SingleChildScrollView without fighting over scroll control.</p>
+                    <span class="where">add_expense_screen.dart → category grid</span>
+                </div>
+                <div class="card accent-mint">
+                    <h3 class="mint">SingleChildScrollView</h3>
+                    <p>Wraps content that might overflow on small screens. Used in AddExpenseScreen (long form) and
+                        LoginScreen. Without it, when the keyboard opens and pushes content up, the screen would
+                        overflow and show a yellow/black error stripe.</p>
+                    <span class="where">login_screen.dart, add_expense_screen.dart</span>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>SafeArea</h3>
+                <p>Wraps content to avoid being obscured by the system status bar (top notch, iOS home indicator at
+                    bottom). In LoginScreen and RegisterScreen, the full-screen gradient <code>Container</code> is
+                    wrapped in <code>SafeArea</code> so text doesn't go behind the time/battery area.</p>
+                <span class="where">login_screen.dart, register_screen.dart</span>
+            </div>
+
+            <div class="concept">
+                <h3>ListTile</h3>
+                <p>A pre-built row widget with <code>leading</code>, <code>title</code>, <code>subtitle</code>, and
+                    <code>trailing</code> slots. Used in ProfileScreen for the birthday row, gender row, and country
+                    row. Also used in AddExpenseScreen's date row. It handles padding and sizing automatically to match
+                    Material Design guidelines.</p>
+                <div class="code">
+                    <span class="cl">ListTile</span>(<br>
+                    &nbsp;&nbsp;leading: <span class="cl">Icon</span>(<span class="cl">Icons</span>.cake_outlined),<br>
+                    &nbsp;&nbsp;title: <span class="cl">Text</span>(<span class="st">"Birthday"</span>),<br>
+                    &nbsp;&nbsp;subtitle: <span class="cl">Text</span>(_birthday == <span class="kw">null</span> ? <span
+                        class="st">"Not set"</span> : ...),<br>
+                    &nbsp;&nbsp;onTap: () =&gt; <span class="fn">_selectBirthday</span>(context),<br>
+                    )
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why use ListView.builder instead of mapping a list to widgets in a Column?</div>
+                <div class="a">A: If you map a list into a Column, all items are built at once — even ones off-screen.
+                    ListView.builder is lazy: it only builds widgets that are currently visible. For a list of 100
+                    transactions, a Column wastes memory and time building all 100; ListView.builder builds maybe 10 at
+                    a time.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=_rnZaagadyo" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Layout Tutorial (Row, Column, etc.)
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       06 — FORMS & INPUTS
+  ══════════════════════════════════════════════════ -->
+        <section id="s6">
+            <div class="section-header">
+                <span class="section-num">06</span>
+                <h2>Forms & Text Input</h2>
+            </div>
+
+            <div class="concept">
+                <h3>The Form + GlobalKey pattern (your most important viva topic)</h3>
+                <p>A <code>Form</code> widget groups multiple <code>TextFormField</code>s together. A
+                    <code>GlobalKey&lt;FormState&gt;</code> gives you access to that group from anywhere in the code —
+                    specifically to call <code>validate()</code> on ALL fields at once.</p>
+                <div class="code">
+                    <span class="cm">// Step 1: create the key (in State class)</span><br>
+                    <span class="kw">final</span> _formKey = <span class="cl">GlobalKey</span>&lt;<span
+                        class="cl">FormState</span>&gt;();<br><br>
+                    <span class="cm">// Step 2: attach to Form widget</span><br>
+                    <span class="cl">Form</span>(<br>
+                    &nbsp;&nbsp;key: <span class="hl">_formKey</span>,<br>
+                    &nbsp;&nbsp;child: <span class="cl">Column</span>(children: [ ... <span
+                        class="cl">TextFormField</span>(validator: ...) ... ]),<br>
+                    )<br><br>
+                    <span class="cm">// Step 3: trigger all validators on button press</span><br>
+                    <span class="kw">void</span> <span class="fn">_signIn</span>() {<br>
+                    &nbsp;&nbsp;<span class="kw">if</span> (!_formKey.currentState!.<span class="fn">validate</span>())
+                    <span class="kw">return</span>; <span class="cm">// stops if any field fails</span><br>
+                    &nbsp;&nbsp;<span class="cm">// proceed with auth...</span><br>
+                    }
+                </div>
+                <span class="where">login_screen.dart</span>
+                <span class="where">register_screen.dart</span>
+                <span class="where">add_expense_screen.dart</span>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-blue">
+                    <h3 class="blue">TextFormField vs TextField</h3>
+                    <p><strong>TextFormField</strong>: knows about its parent <code>Form</code>, has a built-in
+                        <code>validator</code> parameter, shows error text automatically below the field. Used inside
+                        Forms.</p>
+                    <p style="margin-top:0.6rem"><strong>TextField</strong>: simpler, no Form awareness, no validator.
+                        Used in dialogs where you just need input without full validation (the "Add Custom Category"
+                        dialog).</p>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">TextEditingController</h3>
+                    <p>Attached to a TextField/TextFormField to read or pre-fill its value programmatically. In
+                        AddExpenseScreen's <code>initState()</code>, you pre-fill fields when editing an existing
+                        expense: <code>_nameController.text = e.name</code>. Must be disposed in <code>dispose()</code>.
+                    </p>
+                    <span class="where">All form screens</span>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>InputDecoration — customizing the look of your fields</h3>
+                <p>Every TextFormField's visual appearance is controlled by <code>InputDecoration</code>. You used these
+                    properties heavily:</p>
+                <div class="code">
+                    <span class="cl">InputDecoration</span>(<br>
+                    &nbsp;&nbsp;labelText: <span class="st">'Email Address'</span>,<br>
+                    &nbsp;&nbsp;prefixIcon: <span class="cl">Icon</span>(<span
+                        class="cl">Icons</span>.email_outlined),<br>
+                    &nbsp;&nbsp;suffixIcon: <span class="cl">IconButton</span>(...), <span class="cm">// eye toggle for
+                        password</span><br>
+                    &nbsp;&nbsp;filled: <span class="kw">true</span>,<br>
+                    &nbsp;&nbsp;fillColor: <span class="cl">Colors</span>.white.<span class="fn">withAlpha</span>(<span
+                        class="num">15</span>),<br>
+                    &nbsp;&nbsp;border: <span class="cl">OutlineInputBorder</span>(borderRadius: <span
+                        class="cl">BorderRadius</span>.<span class="fn">circular</span>(<span
+                        class="num">14</span>)),<br>
+                    &nbsp;&nbsp;focusedBorder: <span class="cl">OutlineInputBorder</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;borderSide: <span class="cl">BorderSide</span>(color: <span
+                        class="cl">Colors</span>.teal.shade300, width: <span class="num">1.5</span>),<br>
+                    &nbsp;&nbsp;),<br>
+                    )
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>showDatePicker — the built-in date picker dialog</h3>
+                <p>Flutter provides a ready-made calendar dialog via <code>showDatePicker()</code>. It's a
+                    <code>Future</code>-based function — it returns the date the user picked (or null if they
+                    dismissed). In AddExpenseScreen, you also wrapped it in a <code>Theme</code> widget to override the
+                    date picker's colors to match your app theme.</p>
+                <div class="code">
+                    <span class="kw">final</span> pickedDate = <span class="kw">await</span> <span
+                        class="fn">showDatePicker</span>(<br>
+                    &nbsp;&nbsp;context: context,<br>
+                    &nbsp;&nbsp;initialDate: _selectedDate,<br>
+                    &nbsp;&nbsp;firstDate: <span class="cl">DateTime</span>(<span class="num">2020</span>),<br>
+                    &nbsp;&nbsp;lastDate: <span class="cl">DateTime</span>.now(),<br>
+                    &nbsp;&nbsp;builder: (context, child) { <span class="cm">// theme override</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="cl">Theme</span>(data: <span
+                        class="cl">Theme</span>.of(context).<span class="fn">copyWith</span>(...), child: child!);<br>
+                    &nbsp;&nbsp;},<br>
+                    );<br>
+                    <span class="kw">if</span> (pickedDate != <span class="kw">null</span>) <span
+                        class="fn">setState</span>(() =&gt; _selectedDate = pickedDate);
+                </div>
+                <span class="where">add_expense_screen.dart</span>
+                <span class="where">profile_screen.dart</span>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What does the validator function return?</div>
+                <div class="a">A: If the field is valid, return <code>null</code>. If invalid, return a String — that
+                    string becomes the red error text shown below the field. The Form's <code>validate()</code> method
+                    calls every field's validator and returns <code>false</code> if any of them returned a non-null
+                    string.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=2rGoR_sFqzc" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Forms & Validation
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       07 — NAVIGATION
+  ══════════════════════════════════════════════════ -->
+        <section id="s7">
+            <div class="section-header">
+                <span class="section-num">07</span>
+                <h2>Navigation</h2>
+            </div>
+
+            <div class="concept">
+                <h3>How Flutter navigation works — the Navigator Stack</h3>
+                <p>Flutter uses a <strong>stack</strong> of routes (pages). Pushing adds a page to the top; popping
+                    removes the top page. Think of it as a stack of cards — the visible screen is always the top card.
+                </p>
+                <div class="flow">
+                    <div class="flow-box coral">LoginScreen</div>
+                    <div class="flow-arrow">push →</div>
+                    <div class="flow-box mint">HomeScreen</div>
+                    <div class="flow-arrow">push →</div>
+                    <div class="flow-box blue">AddExpenseScreen</div>
+                    <div class="flow-arrow">← pop</div>
+                    <div class="flow-box mint">HomeScreen</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">Navigator.push()</h3>
+                    <p>Adds a new screen on top of the stack. The back button will pop it. Used when going from
+                        HomeScreen → AddExpenseScreen or HomeScreen → ProfileScreen.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">Navigator</span>.<span class="fn">push</span>(<br>
+                        &nbsp;&nbsp;context,<br>
+                        &nbsp;&nbsp;<span class="cl">MaterialPageRoute</span>(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;builder: (ctx) =&gt; <span class="kw">const</span> <span
+                            class="cl">AddExpenseScreen</span>(),<br>
+                        &nbsp;&nbsp;),<br>
+                        );
+                    </div>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">Navigator.pushReplacement()</h3>
+                    <p>Replaces the current screen with a new one. The replaced screen is removed from the stack —
+                        tapping back won't go back to it. Used when going from LoginScreen → RegisterScreen (you don't
+                        want the back button to go to Login from Register).</p>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Navigator.pushAndRemoveUntil()</h3>
+                    <p>Pushes a new route and removes all previous routes until a condition is met. Used after
+                        successful login — you push HomeScreen and clear everything before it, so pressing back doesn't
+                        return to the login form.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">Navigator</span>.<span class="fn">pushAndRemoveUntil</span>(<br>
+                        &nbsp;&nbsp;context,<br>
+                        &nbsp;&nbsp;<span class="cl">MaterialPageRoute</span>(builder: (_) =&gt; <span
+                            class="kw">const</span> <span class="cl">HomeScreen</span>()),<br>
+                        &nbsp;&nbsp;(route) =&gt; <span class="kw">false</span>, <span class="cm">// remove ALL previous
+                            routes</span><br>
+                        );
+                    </div>
+                </div>
+                <div class="card accent-yellow">
+                    <h3 class="yellow">Navigator.pop()</h3>
+                    <p>Removes the top screen from the stack. Used after saving an expense
+                        (<code>Navigator.pop(context)</code> in <code>_submitData()</code>), after closing a dialog, and
+                        in the sign-out confirmation dialog.</p>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is MaterialPageRoute?</div>
+                <div class="a">A: It's a route that uses the standard Material Design page transition (slide from right
+                    on Android, fade on web). It takes a <code>builder</code> function that returns the widget to
+                    display. You can also pass data to the destination screen through the constructor.</div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: How did you pass data to AddExpenseScreen when editing?</div>
+                <div class="a">A: Through the constructor. <code>AddExpenseScreen</code> has an optional
+                    <code>expenseToEdit</code> parameter. When editing, HomeScreen passes the expense object:
+                    <code>AddExpenseScreen(expenseToEdit: expense)</code>. In <code>initState()</code>, we check if it's
+                    non-null and pre-fill the form fields.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=nyvwx7o277U" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Navigation Complete Guide
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       08 — DIALOGS & OVERLAYS
+  ══════════════════════════════════════════════════ -->
+        <section id="s8">
+            <div class="section-header">
+                <span class="section-num">08</span>
+                <h2>Dialogs & Overlays</h2>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-coral">
+                    <h3 class="coral">AlertDialog + showDialog()</h3>
+                    <p>Used for the delete confirmation and the "Add Custom Category" flow. <code>showDialog()</code>
+                        pushes a dialog onto the Navigator stack — it's actually a route, which is why you dismiss it
+                        with <code>Navigator.pop(context)</code>.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="fn">showDialog</span>(<br>
+                        &nbsp;&nbsp;context: context,<br>
+                        &nbsp;&nbsp;builder: (ctx) =&gt; <span class="cl">AlertDialog</span>(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;title: <span class="cl">Text</span>(<span
+                            class="st">'Delete?'</span>),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;actions: [<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cl">TextButton</span>(onPressed: () =&gt; <span
+                            class="cl">Navigator</span>.<span class="fn">pop</span>(ctx), ...),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;],<br>
+                        &nbsp;&nbsp;),<br>
+                        );
+                    </div>
+                    <span class="where">home_screen.dart → delete dialog</span>
+                    <span class="where">add_expense_screen.dart → add category</span>
+                    <span class="where">profile_screen.dart → sign out confirm</span>
+                </div>
+                <div class="card accent-mint">
+                    <h3 class="mint">ScaffoldMessenger + SnackBar</h3>
+                    <p>Shows a brief message at the bottom of the screen without blocking the UI. Used in ProfileScreen
+                        after saving the profile, and to show error messages when image saving fails.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">ScaffoldMessenger</span>.of(context).<span class="fn">showSnackBar</span>(<br>
+                        &nbsp;&nbsp;<span class="cl">SnackBar</span>(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;content: <span class="cl">Text</span>(<span class="st">'Profile
+                            saved!'</span>),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;backgroundColor: <span class="cl">Colors</span>.green,<br>
+                        &nbsp;&nbsp;),<br>
+                        );
+                    </div>
+                    <span class="where">profile_screen.dart</span>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>GestureDetector — making anything tappable</h3>
+                <p>Any widget can be made interactive by wrapping it in a <code>GestureDetector</code>. It detects taps,
+                    long presses, drags, swipes, and more. Used in your project to make the entire TransactionCard
+                    tappable (expand/collapse), the "Create Account" text tappable, and the category grid tiles
+                    tappable.</p>
+                <div class="code">
+                    <span class="cl">GestureDetector</span>(<br>
+                    &nbsp;&nbsp;onTap: () =&gt; <span class="fn">setState</span>(() =&gt; _isExpanded =
+                    !_isExpanded),<br>
+                    &nbsp;&nbsp;child: <span class="cl">AnimatedContainer</span>(...), <span class="cm">// the
+                        card</span><br>
+                    )
+                </div>
+                <span class="where">home_screen.dart → TransactionCard</span>
+                <span class="where">login_screen.dart → "Create Account" text</span>
+                <span class="where">add_expense_screen.dart → category tiles</span>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=g0EZMNO0OOU" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Dialogs & Popups
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       09 — STREAMBUILDER
+  ══════════════════════════════════════════════════ -->
+        <section id="s9">
+            <div class="section-header">
+                <span class="section-num">09</span>
+                <h2>StreamBuilder — the heart of your app</h2>
+            </div>
+
+            <div class="concept">
+                <h3>What is a Stream?</h3>
+                <p>A Stream is like a pipe that delivers data over time — multiple events, not just one. Firebase
+                    Firestore provides real-time streams: every time the database changes, the stream emits new data
+                    automatically. Your UI rebuilds with the fresh data instantly, with no refresh button needed.</p>
+                <div class="flow">
+                    <div class="flow-box yellow">Firestore DB changes</div>
+                    <div class="flow-arrow">→ emits event →</div>
+                    <div class="flow-box blue">Stream</div>
+                    <div class="flow-arrow">→ triggers →</div>
+                    <div class="flow-box mint">StreamBuilder rebuilds UI</div>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>StreamBuilder anatomy — from your code</h3>
+                <div class="code">
+                    <span class="cl">StreamBuilder</span>&lt;<span class="cl">List</span>&lt;<span
+                        class="cl">Expense</span>&gt;&gt;(<br>
+                    &nbsp;&nbsp;stream: repository.<span class="fn">getExpenses</span>(), <span class="cm">// the
+                        Firebase stream</span><br>
+                    &nbsp;&nbsp;builder: (context, <span class="hl">snapshot</span>) {<br>
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 1. Still waiting for first data</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (snapshot.connectionState == <span
+                        class="cl">ConnectionState</span>.waiting) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span
+                        class="cl">CircularProgressIndicator</span>();<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 2. Error from stream</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (snapshot.hasError) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span
+                        class="cl">Text</span>(<span class="st">'Error: </span>${snapshot.error}<span
+                        class="st">'</span>);<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 3. Data arrived — use it</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">final</span> expenses = snapshot.data ?? [];<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="cl">ListView</span>(...); <span
+                        class="cm">// build UI with expenses</span><br>
+                    &nbsp;&nbsp;},<br>
+                    )
+                </div>
+                <span class="where">home_screen.dart — expenses list + auth state in app.dart</span>
+            </div>
+
+            <div class="concept">
+                <h3>Nested StreamBuilders — what you did in HomeScreen</h3>
+                <p>HomeScreen has two streams running simultaneously: one for the user's profile (name, currency) and
+                    one for the expenses list. They're nested — the outer one provides currency code, the inner one
+                    provides the expenses. When either changes, the relevant part of the UI rebuilds.</p>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is snapshot.connectionState?</div>
+                <div class="a">A: It's the current state of the stream connection. The key values are:
+                    <code>waiting</code> (stream connected but no data yet — show a loading spinner),
+                    <code>active</code> (data is flowing — this is the normal state), <code>done</code> (stream closed —
+                    won't emit more data), and <code>none</code> (not connected).</div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What's the difference between a Stream and a Future?</div>
+                <div class="a">A: A Future delivers exactly one result then it's done — like an HTTP request. A Stream
+                    delivers multiple results over time — like a live feed. Firebase's <code>getExpenses()</code>
+                    returns a Stream because the database can change at any moment and we want the UI to update
+                    automatically each time.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=nQBpOIHE4eE" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                StreamBuilder & Streams in Flutter
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       10 — FUTUREBUILDER
+  ══════════════════════════════════════════════════ -->
+        <section id="s10">
+            <div class="section-header">
+                <span class="section-num">10</span>
+                <h2>FutureBuilder</h2>
+            </div>
+
+            <div class="concept">
+                <h3>When you used it and why</h3>
+                <p>Profile images are stored locally on the device. The filename is saved in Firestore, but to display
+                    it you need the full file path — which requires an <code>async</code> call to
+                    <code>getApplicationDocumentsDirectory()</code>. Since this is a one-time async operation (not a
+                    live stream), you use <code>FutureBuilder</code>.</p>
+                <div class="code">
+                    <span class="cl">FutureBuilder</span>&lt;<span class="cl">String</span>&gt;(<br>
+                    &nbsp;&nbsp;future: <span class="cl">UserRepository</span>().<span
+                        class="fn">getLocalPath</span>(userProfile!.profilePicUrl!),<br>
+                    &nbsp;&nbsp;builder: (context, snapshot) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (snapshot.hasData) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span
+                        class="cl">CircleAvatar</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;backgroundImage: <span
+                        class="cl">FileImage</span>(<span class="cl">File</span>(snapshot.data!)),<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;);<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="kw">const</span> <span
+                        class="cl">CircleAvatar</span>(radius: <span class="num">14</span>); <span class="cm">//
+                        placeholder</span><br>
+                    &nbsp;&nbsp;},<br>
+                    )
+                </div>
+                <span class="where">home_screen.dart → profile avatar in AppBar</span>
+                <span class="where">profile_screen.dart → cover + profile photo display</span>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why not use StreamBuilder for the profile image?</div>
+                <div class="a">A: Because reading a local file path is a one-time async operation — there's no live
+                    updates coming from it. A Future resolves once. A Stream keeps emitting. The wrong choice would
+                    waste resources listening to a stream that never emits a second time.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=ek8ZPdWj4Qo" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                FutureBuilder in Flutter
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       11 — ANIMATIONS
+  ══════════════════════════════════════════════════ -->
+        <section id="s11">
+            <div class="section-header">
+                <span class="section-num">11</span>
+                <h2>Animations</h2>
+            </div>
+
+            <div class="concept">
+                <h3>Explicit animations — LoginScreen entry animation</h3>
+                <p>You used the full animation system with <code>AnimationController</code>, <code>Tween</code>, and
+                    <code>CurvedAnimation</code>. The login form fades in and slides up when the screen opens.</p>
+                <div class="code">
+                    <span class="cm">// In State class — uses SingleTickerProviderStateMixin for the vsync</span><br>
+                    <span class="kw">late</span> <span class="cl">AnimationController</span> _animController;<br>
+                    <span class="kw">late</span> <span class="cl">Animation</span>&lt;<span class="kw">double</span>&gt;
+                    _fadeAnim;<br>
+                    <span class="kw">late</span> <span class="cl">Animation</span>&lt;<span class="cl">Offset</span>&gt;
+                    _slideAnim;<br><br>
+                    <span class="cm">// initState:</span><br>
+                    _animController = <span class="cl">AnimationController</span>(<br>
+                    &nbsp;&nbsp;vsync: <span class="kw">this</span>, <span class="cm">// "this" works because of the
+                        mixin</span><br>
+                    &nbsp;&nbsp;duration: <span class="kw">const</span> <span class="cl">Duration</span>(milliseconds:
+                    <span class="num">700</span>),<br>
+                    );<br>
+                    _fadeAnim = <span class="cl">CurvedAnimation</span>(parent: _animController, curve: <span
+                        class="cl">Curves</span>.easeOut);<br>
+                    _slideAnim = <span class="cl">Tween</span>&lt;<span class="cl">Offset</span>&gt;(<br>
+                    &nbsp;&nbsp;begin: <span class="kw">const</span> <span class="cl">Offset</span>(<span
+                        class="num">0</span>, <span class="num">0.25</span>), <span class="cm">// 25% below final
+                        position</span><br>
+                    &nbsp;&nbsp;end: <span class="cl">Offset</span>.zero,<br>
+                    ).<span class="fn">animate</span>(_animController);<br>
+                    _animController.<span class="fn">forward</span>(); <span class="cm">// start playing</span><br><br>
+                    <span class="cm">// In build:</span><br>
+                    <span class="cl">FadeTransition</span>(<br>
+                    &nbsp;&nbsp;opacity: _fadeAnim,<br>
+                    &nbsp;&nbsp;child: <span class="cl">SlideTransition</span>(position: _slideAnim, child: ...),<br>
+                    )
+                </div>
+                <span class="where">login_screen.dart (and register_screen.dart)</span>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">AnimatedContainer — implicit animation</h3>
+                    <p>The simpler animation approach. You set the end values and Flutter smoothly animates between old
+                        and new values automatically. Used for category tile selection (color changes smoothly) and the
+                        TransactionCard expand/collapse (shadow changes).</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">AnimatedContainer</span>(<br>
+                        &nbsp;&nbsp;duration: <span class="kw">const</span> <span
+                            class="cl">Duration</span>(milliseconds: <span class="num">200</span>),<br>
+                        &nbsp;&nbsp;color: isSelected ? primaryColor : <span class="cl">Colors</span>.white,<br>
+                        &nbsp;&nbsp;<span class="cm">// Flutter interpolates between old+new</span><br>
+                        )
+                    </div>
+                    <span class="where">add_expense_screen.dart → category + type button</span>
+                    <span class="where">home_screen.dart → transaction card</span>
+                </div>
+                <div class="card accent-yellow">
+                    <h3 class="yellow">SingleTickerProviderStateMixin</h3>
+                    <p>A mixin added to the State class to make it a "vsync provider". The
+                        <code>AnimationController</code> needs a vsync to sync with the screen's refresh rate
+                        (60fps/120fps). Without this mixin, you can't create an AnimationController in a State class.
+                    </p>
+                    <span class="where">login_screen.dart, register_screen.dart</span>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is the difference between AnimatedContainer and explicit animations with
+                    AnimationController?</div>
+                <div class="a">A: <strong>AnimatedContainer</strong> (implicit) is automatic — you just change a value
+                    and it animates smoothly. No controller needed. <strong>AnimationController</strong> (explicit)
+                    gives full manual control — you decide when it starts, stops, reverses, and you can sync multiple
+                    animations together. We used explicit in LoginScreen because we needed two animations (fade + slide)
+                    triggered exactly when the screen opens.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=OtrWXLfGtqE" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Animations Explained
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       12 — THEME SYSTEM
+  ══════════════════════════════════════════════════ -->
+        <section id="s12">
+            <div class="section-header">
+                <span class="section-num">12</span>
+                <h2>Theme System</h2>
+            </div>
+
+            <div class="concept">
+                <h3>ThemeData in app.dart — defining app-wide styles</h3>
+                <p>Instead of setting colors and styles on every widget individually, you define them once in
+                    <code>ThemeData</code> inside <code>MaterialApp</code>. Every widget in the app inherits these
+                    defaults unless you override them locally.</p>
+                <div class="code">
+                    <span class="cl">ThemeData</span>(<br>
+                    &nbsp;&nbsp;useMaterial3: <span class="kw">true</span>,<br>
+                    &nbsp;&nbsp;colorScheme: <span class="cl">ColorScheme</span>.<span class="fn">fromSeed</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;seedColor: <span class="kw">const</span> <span class="cl">Color</span>(<span
+                        class="num">0xFF6DE8C3</span>),<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;primary: <span class="kw">const</span> <span class="cl">Color</span>(<span
+                        class="num">0xFF2D6A4F</span>),<br>
+                    &nbsp;&nbsp;),<br>
+                    &nbsp;&nbsp;textTheme: <span class="cl">GoogleFonts</span>.<span
+                        class="fn">outfitTextTheme</span>(), <span class="cm">// app-wide font</span><br>
+                    &nbsp;&nbsp;elevatedButtonTheme: <span class="cl">ElevatedButtonThemeData</span>(...), <span
+                        class="cm">// default button style</span><br>
+                    &nbsp;&nbsp;inputDecorationTheme: <span class="cl">InputDecorationTheme</span>(...), <span
+                        class="cm">// default field look</span><br>
+                    &nbsp;&nbsp;cardTheme: <span class="cl">CardThemeData</span>(...), <span class="cm">// default card
+                        style</span><br>
+                    )
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">Theme.of(context)</h3>
+                    <p>Retrieves the nearest theme from the widget tree. Used everywhere to get consistent colors:
+                        <code>Theme.of(context).colorScheme.primary</code> for the teal green. This means if the theme
+                        changes, all widgets using it update automatically.</p>
+                    <span class="where">home_screen.dart → summary card gradient, button colors</span>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Theme.copyWith()</h3>
+                    <p>Creates a locally modified theme without changing the global one. Used in the date picker to
+                        override just the calendar's color scheme while keeping everything else the same.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cl">Theme</span>(<br>
+                        &nbsp;&nbsp;data: <span class="cl">Theme</span>.<span class="fn">of</span>(context).<span
+                            class="fn">copyWith</span>(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;colorScheme: <span class="cl">ColorScheme</span>.light(primary:
+                        ...),<br>
+                        &nbsp;&nbsp;),<br>
+                        &nbsp;&nbsp;child: child!,<br>
+                        )
+                    </div>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why use <code>Theme.of(context).colorScheme.primary</code> instead of hardcoding
+                    <code>Color(0xFF2D6A4F)</code>?</div>
+                <div class="a">A: If you later change the app's primary color in ThemeData, you only change it in one
+                    place and every widget that reads from the theme updates automatically. Hardcoded colors require you
+                    to find and change every single occurrence — error-prone and tedious.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=oTvQDJOBXmM" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Flutter Theming & Material 3
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       13 — MODELS & CLASSES
+  ══════════════════════════════════════════════════ -->
+        <section id="s13">
+            <div class="section-header">
+                <span class="section-num">13</span>
+                <h2>Data Models & Classes</h2>
+            </div>
+
+            <div class="concept">
+                <h3>Why models exist — separating data from UI</h3>
+                <p>A model is a plain Dart class that represents a piece of data. Your <code>Expense</code> and
+                    <code>UserModel</code> classes know how to convert between Dart objects and Firestore maps. The UI
+                    never manually handles raw map data — it always works with typed objects.</p>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">Expense model</h3>
+                    <ul>
+                        <li><code>fromFirestore(DocumentSnapshot)</code> — converts Firestore data → Dart object</li>
+                        <li><code>toFirestore()</code> — converts Dart object → Map to save to Firestore</li>
+                        <li><code>bool get isIncome</code> — computed getter, not a stored field</li>
+                        <li>The <code>type</code> field is either <code>'income'</code> or <code>'expense'</code>
+                            (String)</li>
+                    </ul>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">UserModel</h3>
+                    <ul>
+                        <li><code>fromMap(Map, id)</code> — converts Firestore data → UserModel</li>
+                        <li><code>toMap()</code> — converts → Map for saving</li>
+                        <li><code>int get age</code> — computed getter that calculates age from birthday</li>
+                        <li><code>Map&lt;String, String&gt; customExpenseCategories</code> — user's custom categories
+                            stored in Firestore</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>factory constructor — Expense.fromFirestore()</h3>
+                <p>A <code>factory</code> constructor is a special constructor that can return an existing instance or
+                    do complex setup before creating the object. You used it as the standard pattern for deserializing
+                    Firestore data:</p>
+                <div class="code">
+                    <span class="kw">factory</span> <span class="cl">Expense</span>.<span
+                        class="fn">fromFirestore</span>(<span class="cl">DocumentSnapshot</span> doc) {<br>
+                    &nbsp;&nbsp;<span class="cl">Map</span>&lt;<span class="cl">String</span>, <span
+                        class="kw">dynamic</span>&gt; data = doc.data() <span class="kw">as</span> <span
+                        class="cl">Map</span>&lt;<span class="cl">String</span>, <span
+                        class="kw">dynamic</span>&gt;;<br>
+                    &nbsp;&nbsp;<span class="kw">return</span> <span class="cl">Expense</span>(<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;id: doc.id, <span class="cm">// id comes from the document, not the
+                        data</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;name: data[<span class="st">'name'</span>] ?? <span class="st">''</span>,
+                    <span class="cm">// null-safe with default</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;amount: (data[<span class="st">'amount'</span>] ?? <span
+                        class="num">0.0</span>).toDouble(),<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;date: (data[<span class="st">'date'</span>] <span class="kw">as</span> <span
+                        class="cl">Timestamp</span>).<span class="fn">toDate</span>(),<br>
+                    &nbsp;&nbsp;);<br>
+                    }
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why use <code>?? ''</code> (null-aware default) when reading from Firestore?</div>
+                <div class="a">A: Firestore documents might have missing fields — especially older documents created
+                    before you added a new field. The <code>??</code> operator provides a fallback value if the left
+                    side is null, preventing a null crash when building the model.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=64KixIgs9NE" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Dart Classes & Constructors
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       14 — ASYNC / AWAIT
+  ══════════════════════════════════════════════════ -->
+        <section id="s14">
+            <div class="section-header">
+                <span class="section-num">14</span>
+                <h2>Async / Await & Error Handling</h2>
+            </div>
+
+            <div class="concept">
+                <h3>Why async matters in your app</h3>
+                <p>Any time your app talks to the internet (Firebase) or the file system (saving images), it takes time.
+                    Dart is single-threaded — if you block the thread waiting, the UI freezes. <code>async/await</code>
+                    lets you "pause" a function without blocking the rest of the app.</p>
+                <div class="code">
+                    <span class="cm">// Without async/await — this would FREEZE the UI:</span><br>
+                    <span class="kw">void</span> <span class="fn">_signIn</span>() {<br>
+                    &nbsp;&nbsp;<span class="kw">final</span> result = authService.<span class="fn">signIn</span>(...);
+                    <span class="cm">// ← can't do this, Future returned</span><br>
+                    }<br><br>
+                    <span class="cm">// With async/await — UI stays responsive:</span><br>
+                    <span class="cl">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">_signIn</span>()
+                    <span class="kw">async</span> {<br>
+                    &nbsp;&nbsp;<span class="fn">setState</span>(() =&gt; _isLoading = <span class="kw">true</span>);
+                    <span class="cm">// show spinner</span><br>
+                    &nbsp;&nbsp;<span class="kw">await</span> authService.<span class="fn">signIn</span>(...); <span
+                        class="cm">// pause HERE, but UI still runs</span><br>
+                    &nbsp;&nbsp;<span class="fn">setState</span>(() =&gt; _isLoading = <span class="kw">false</span>);
+                    <span class="cm">// hide spinner</span><br>
+                    }
+                </div>
+            </div>
+
+            <div class="concept">
+                <h3>try / catch / finally — your error handling pattern</h3>
+                <p>Used consistently throughout all your async operations. Firebase can throw exceptions (wrong
+                    password, network error). You catch <code>FirebaseAuthException</code> specifically to get the error
+                    <code>code</code> and show a friendly message.</p>
+                <div class="code">
+                    <span class="kw">try</span> {<br>
+                    &nbsp;&nbsp;<span class="kw">await</span> _authService.<span class="fn">signIn</span>(email: ...,
+                    password: ...);<br>
+                    &nbsp;&nbsp;<span class="cm">// navigate on success</span><br>
+                    } <span class="kw">on</span> <span class="cl">FirebaseAuthException</span> <span
+                        class="kw">catch</span> (e) {<br>
+                    &nbsp;&nbsp;<span class="fn">setState</span>(() =&gt; _errorMessage = <span
+                        class="fn">_mapError</span>(e.code)); <span class="cm">// user-friendly message</span><br>
+                    } <span class="kw">finally</span> {<br>
+                    &nbsp;&nbsp;<span class="cm">// always runs — success OR failure</span><br>
+                    &nbsp;&nbsp;<span class="kw">if</span> (mounted) <span class="fn">setState</span>(() =&gt;
+                    _isLoading = <span class="kw">false</span>);<br>
+                    }
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What does the <code>finally</code> block do and why is it important?</div>
+                <div class="a">A: The <code>finally</code> block always runs — whether the try succeeded or an exception
+                    was caught. We put <code>_isLoading = false</code> there because we always want to hide the spinner,
+                    regardless of what happened. If you put it only in the <code>try</code> block, an exception would
+                    leave the spinner spinning forever.</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=SmEE2CHMvjw" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Dart Async, Await & Futures
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       15 — COLLECTIONS & DART LANGUAGE
+  ══════════════════════════════════════════════════ -->
+        <section id="s15">
+            <div class="section-header">
+                <span class="section-num">15</span>
+                <h2>Collections & Dart Language Features</h2>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">.where() — filtering lists</h3>
+                    <p>Used in HomeScreen to calculate totals. <code>.where()</code> filters the list to items matching
+                        a condition, then <code>.fold()</code> sums them up.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="kw">final</span> totalExpense = expenses<br>
+                        &nbsp;&nbsp;.<span class="fn">where</span>((e) =&gt; e.type == <span
+                            class="st">'expense'</span>)<br>
+                        &nbsp;&nbsp;.<span class="fn">fold</span>(<span class="num">0.0</span>, (sum, item) =&gt; sum +
+                        item.amount);<br>
+                        <span class="cm">// fold: starts at 0.0, adds each item's amount</span>
+                    </div>
+                    <span class="where">home_screen.dart</span>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">Map&lt;String, String&gt;</h3>
+                    <p>Used for categories (name → emoji) and custom user categories.
+                        <code>.keys.elementAt(index)</code> and <code>.values.elementAt(index)</code> used to iterate
+                        them in GridView since Maps don't have numeric indices.</p>
+                    <span class="where">add_expense_screen.dart → _defaultExpenseCategories</span>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Null Safety operators</h3>
+                    <ul>
+                        <li><code>??</code> — null-aware default: <code>expenses ?? []</code></li>
+                        <li><code>?.</code> — null-safe access: <code>userProfile?.name</code></li>
+                        <li><code>!</code> — null assertion (you're sure it's not null): <code>expense.id!</code></li>
+                        <li><code>late</code> — declares a non-null field initialized later:
+                            <code>late AnimationController _animController</code></li>
+                    </ul>
+                </div>
+                <div class="card accent-yellow">
+                    <h3 class="yellow">Arrow functions & lambdas</h3>
+                    <p>Short functions using <code>=&gt;</code>. Used heavily in your code for callbacks:</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="cm">// These are equivalent:</span><br>
+                        onPressed: () { _signIn(); }<br>
+                        onPressed: () =&gt; _signIn()<br><br>
+                        <span class="cm">// In repository:</span><br>
+                        .<span class="fn">map</span>((doc) =&gt; <span class="cl">Expense</span>.<span
+                            class="fn">fromFirestore</span>(doc))
+                    </div>
+                </div>
+                <div class="card accent-purple">
+                    <h3 class="purple">Spread operator <code>...</code></h3>
+                    <p>Used in the if-in-collection pattern for the error banner in LoginScreen. If
+                        <code>_errorMessage != null</code>, the error widget is spread into the Column's children list;
+                        otherwise nothing is added.</p>
+                    <div class="code" style="font-size:0.73rem; margin-top:0.8rem">
+                        <span class="kw">if</span> (_errorMessage != <span class="kw">null</span>) ...[<br>
+                        &nbsp;&nbsp;<span class="cl">Container</span>(<span class="cm">/* error banner */</span>),<br>
+                        &nbsp;&nbsp;<span class="cl">SizedBox</span>(height: <span class="num">18</span>),<br>
+                        ],
+                    </div>
+                    <span class="where">login_screen.dart, register_screen.dart</span>
+                </div>
+                <div class="card accent-mint">
+                    <h3 class="mint">intl package — DateFormat</h3>
+                    <p>Used to format <code>DateTime</code> objects into readable strings.
+                        <code>DateFormat('MMM dd, yyyy')</code> → "Jan 15, 2025".
+                        <code>DateFormat('MMM dd, hh:mm a')</code> → "Jan 15, 03:30 PM". Without this,
+                        <code>DateTime.toString()</code> gives an ugly technical string.</p>
+                    <span class="where">home_screen.dart, add_expense_screen.dart, profile_screen.dart</span>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: What is <code>toStringAsFixed(2)</code>?</div>
+                <div class="a">A: It's a method on <code>double</code> that formats the number to exactly 2 decimal
+                    places as a String. <code>1234.5.toStringAsFixed(2)</code> → <code>"1234.50"</code>. Used for
+                    displaying currency amounts like "1234.50" instead of "1234.5" or "1234.4999999".</div>
+            </div>
+
+            <a href="https://www.youtube.com/watch?v=0CTj3x6jgeY" class="yt-link" target="_blank">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                </svg>
+                Dart Language Essential Features
+            </a>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       16 — FIREBASE FEATURES SUMMARY
+  ══════════════════════════════════════════════════ -->
+        <section id="s16">
+            <div class="section-header">
+                <span class="section-num">16</span>
+                <h2>Firebase — What Was Used & Where</h2>
+            </div>
+
+            <div class="tip">
+                <div class="tip-label">📌 Note</div>
+                <p>A separate Firebase deep-dive note is coming. This section gives you a quick map of which Firebase
+                    feature maps to which code, so you can answer "where is X used" questions in the viva.</p>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-mint">
+                    <h3 class="mint">Firebase Auth</h3>
+                    <ul>
+                        <li>Sign up with email/password → <code>RegisterScreen</code></li>
+                        <li>Sign in → <code>LoginScreen → AuthService.signIn()</code></li>
+                        <li>Sign out → <code>ProfileScreen → AuthService.signOut()</code></li>
+                        <li>Auth state stream → <code>app.dart → StreamBuilder on authStateChanges()</code> (auto-route
+                            to Home or Login)</li>
+                        <li>Current user's UID → <code>FirebaseAuth.instance.currentUser!.uid</code> — used in both
+                            repositories to scope all data to the logged-in user</li>
+                    </ul>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Cloud Firestore</h3>
+                    <ul>
+                        <li>Data path: <code>users/{uid}/expenses/{expenseId}</code></li>
+                        <li>CRUD: <code>addExpense()</code>, <code>getExpenses()</code> (real-time stream),
+                            <code>updateExpense()</code>, <code>deleteExpense()</code></li>
+                        <li>User profile: <code>users/{uid}</code> — saved with <code>SetOptions(merge: true)</code> to
+                            not overwrite fields</li>
+                        <li><code>Timestamp</code> ↔ <code>DateTime</code> conversion in both models</li>
+                        <li>All data is user-scoped — no user can read another's data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: How does the app know which expenses belong to which user?</div>
+                <div class="a">A: All expenses are stored under <code>users/{uid}/expenses/</code> where
+                    <code>uid</code> is the Firebase Auth user ID. The repository gets the uid from
+                    <code>FirebaseAuth.instance.currentUser!.uid</code> and uses it to build the Firestore path. So each
+                    user has their own sub-collection that only they can access.</div>
+            </div>
+
+            <div class="viva">
+                <div class="viva-label">⚡ Viva Q&A</div>
+                <div class="q">Q: Why are profile images stored locally instead of Firebase Storage?</div>
+                <div class="a">A: A deliberate design choice. Firebase Storage requires additional configuration, has a
+                    cost, and needs internet to load every time. Storing images locally with
+                    <code>getApplicationDocumentsDirectory()</code> means they load instantly offline. The trade-off is
+                    they don't sync across devices or survive a reinstall.</div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+       17 — VIVA CHEATSHEET
+  ══════════════════════════════════════════════════ -->
+        <section id="s17">
+            <div class="section-header">
+                <span class="section-num">17</span>
+                <h2>The Final Viva Cheatsheet</h2>
+            </div>
+
+            <div class="tip">
+                <div class="tip-label">🎓 Examiner's Trap — Optimization Question</div>
+                <p>If asked <strong>"How did you optimize your app?"</strong> — Don't say "I used icons". Say: <em>"I
+                        used <strong>const constructors</strong> wherever possible so Flutter reuses widget instances
+                        instead of rebuilding them. I used <strong>ListView.builder</strong> for lazy rendering so only
+                        visible transactions are built. I used <strong>AnimatedContainer</strong> for simple transitions
+                        instead of full AnimationControllers — less boilerplate, less overhead. I also checked
+                        <strong>mounted</strong> before all setState calls after async operations to avoid updating a
+                        destroyed widget."</em></p>
+            </div>
+
+            <div class="grid grid-3">
+                <div class="card accent-mint">
+                    <h3 class="mint">Widget types used</h3>
+                    <ul>
+                        <li>StatelessWidget × 3 screens</li>
+                        <li>StatefulWidget × 5 screens/components</li>
+                        <li>StreamBuilder (multiple)</li>
+                        <li>FutureBuilder (for local images)</li>
+                        <li>AnimatedContainer (implicit)</li>
+                        <li>FadeTransition + SlideTransition (explicit)</li>
+                    </ul>
+                </div>
+                <div class="card accent-blue">
+                    <h3 class="blue">Navigation methods used</h3>
+                    <ul>
+                        <li><code>push()</code> — Home → Add/Profile</li>
+                        <li><code>pushReplacement()</code> — Login ↔ Register</li>
+                        <li><code>pushAndRemoveUntil()</code> — After login</li>
+                        <li><code>pop()</code> — After save / dialog close</li>
+                    </ul>
+                </div>
+                <div class="card accent-coral">
+                    <h3 class="coral">Dart features used</h3>
+                    <ul>
+                        <li>Null safety (<code>?</code>, <code>??</code>, <code>!</code>, <code>late</code>)</li>
+                        <li>async / await / try-catch-finally</li>
+                        <li><code>factory</code> constructors</li>
+                        <li>Computed getters (<code>get isIncome</code>)</li>
+                        <li><code>.where().fold()</code> for totals</li>
+                        <li>Spread (<code>...</code>) in widget lists</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card accent-yellow">
+                    <h3 class="yellow">10 questions they'll definitely ask</h3>
+                    <ol style="padding-left:1.2rem; color:#99A8C0; font-size:0.85rem; line-height:2.2">
+                        <li>What's the difference between StatelessWidget and StatefulWidget?</li>
+                        <li>What does setState() do?</li>
+                        <li>What is BuildContext?</li>
+                        <li>Explain how StreamBuilder works</li>
+                        <li>How did you validate your forms?</li>
+                        <li>How does navigation work in Flutter?</li>
+                        <li>Why do you use dispose()?</li>
+                        <li>What is async/await and why use it?</li>
+                        <li>How is data saved per-user?</li>
+                        <li>What's the difference between a Stream and a Future?</li>
+                    </ol>
+                </div>
+                <div class="card accent-purple">
+                    <h3 class="purple">Key files → key concepts</h3>
+                    <ul style="font-size:0.84rem">
+                        <li><code>main.dart</code> → app entry, Firebase init</li>
+                        <li><code>app.dart</code> → MaterialApp, ThemeData, auth routing</li>
+                        <li><code>login_screen.dart</code> → Form, GlobalKey, AnimationController, try-catch</li>
+                        <li><code>home_screen.dart</code> → nested StreamBuilders, ListView.builder, StatelessWidget
+                            doing reactive UI</li>
+                        <li><code>add_expense_screen.dart</code> → GridView, DatePicker, initState pre-fill, edit vs
+                            create</li>
+                        <li><code>profile_screen.dart</code> → SliverAppBar, FutureBuilder, image_picker</li>
+                        <li><code>expense_repository.dart</code> → CRUD pattern, user-scoped paths</li>
+                        <li><code>expense_model.dart</code> → factory constructor, Timestamp conversion</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <footer
+            style="margin-top:4rem; padding-top:2rem; border-top:1px solid var(--border); text-align:center; color:var(--dim); font-size:0.78rem; padding-bottom:2rem;">
+            <p>CSE464 · Group 4 · Section 2 · elmuntasir · Spring 2026</p>
+            <p style="margin-top:0.4rem">Firebase deep-dive note coming separately</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+
+        // Active nav link
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+
+        sections.forEach(s => observer.observe(s));
+    </script>
+</body>
+
+</html>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -16,8 +17,50 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF6DE8C3), // Soft Mint
+          primary: const Color(0xFF2D6A4F),
+          secondary: const Color(0xFFFF9B9B), // Soft Coral/Pink
+          surface: const Color(0xFFF9FFF9),
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Color(0xFF2D6A4F),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2D6A4F),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          color: Colors.white,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF6DE8C3), width: 2),
+          ),
         ),
       ),
       home: StreamBuilder<User?>(

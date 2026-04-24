@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 import '../repositories/expense_repository.dart';
-import '../services/auth_service.dart';
 import 'add_expense_screen.dart';
+import 'profile_screen.dart';
+import '../repositories/user_repository.dart';
+import '../models/user_model.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,90 +17,146 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser!;
     final repository = ExpenseRepository();
-    final authService = AuthService();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Expense Tracker',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            Text(
-              user.displayName?.isNotEmpty == true
-                  ? user.displayName!
-                  : user.email ?? '',
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onPrimaryContainer
-                    .withAlpha(180),
-              ),
-            ),
-          ],
+        title: StreamBuilder<UserModel?>(
+          stream: UserRepository().getUserData(),
+          builder: (context, profileSnapshot) {
+            final userProfile = profileSnapshot.data;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Expense Tracker',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  userProfile?.name.isNotEmpty == true
+                      ? userProfile!.name
+                      : (user.displayName?.isNotEmpty == true
+                          ? user.displayName!
+                          : user.email ?? ''),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer
+                        .withAlpha(180),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         centerTitle: false,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
-          IconButton(
-            tooltip: 'Sign Out',
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => _confirmSignOut(context, authService),
+          StreamBuilder<UserModel?>(
+            stream: UserRepository().getUserData(),
+            builder: (context, snapshot) {
+              final userProfile = snapshot.data;
+              debugPrint('Home Screen - Profile Data: $userProfile');
+              return IconButton(
+                tooltip: 'Profile',
+                icon: userProfile?.profilePicUrl != null
+                    ? FutureBuilder<String>(
+                        future: UserRepository().getLocalPath(userProfile!.profilePicUrl!),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return CircleAvatar(
+                              radius: 14,
+                              backgroundImage: FileImage(File(snapshot.data!)),
+                            );
+                          }
+                          return const CircleAvatar(radius: 14);
+                        },
+                      )
+                    : CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(50),
+                        child: const Icon(Icons.person_outline, size: 18),
+                      ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
-      body: StreamBuilder<List<Expense>>(
-        stream: repository.getExpenses(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: StreamBuilder<UserModel?>(
+        stream: UserRepository().getUserData(),
+        builder: (context, profileSnapshot) {
+          final userProfile = profileSnapshot.data;
+          final currency = userProfile?.currencyCode ?? r'$';
+          
+          // Debugging (optional but helpful for the user to see in logs)
+          debugPrint('User Profile Currency: ${userProfile?.currencyCode}');
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+          return StreamBuilder<List<Expense>>(
+            stream: repository.getExpenses(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          final expenses = snapshot.data ?? [];
-          final totalAmount =
-              expenses.fold(0.0, (sum, item) => sum + item.amount);
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-          return Column(
-            children: [
-              _buildSummaryCard(context, totalAmount, user, expenses.length),
-              const Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Recent Expenses',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: expenses.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 100),
-                        itemCount: expenses.length,
-                        itemBuilder: (context, index) {
-                          final expense = expenses[index];
-                          return _buildExpenseCard(
-                              context, expense, repository);
-                        },
+              final expenses = snapshot.data ?? [];
+              final totalExpense = expenses
+                  .where((e) => e.type == 'expense')
+                  .fold(0.0, (sum, item) => sum + item.amount);
+              final totalIncome = expenses
+                  .where((e) => e.type == 'income')
+                  .fold(0.0, (sum, item) => sum + item.amount);
+
+              return Column(
+                children: [
+                  _buildSummaryCard(context, totalIncome, totalExpense, user, expenses.length, userProfile),
+                  const Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Recent Expenses',
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-              ),
-            ],
+                    ),
+                  ),
+                  Expanded(
+                    child: expenses.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.separated(
+                            padding: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+                            itemCount: expenses.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final expense = expenses[index];
+                              return TransactionCard(
+                                expense: expense,
+                                repository: repository,
+                                currency: currency,
+                                profile: userProfile,
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
@@ -104,14 +164,16 @@ class HomeScreen extends StatelessWidget {
                 builder: (context) => const AddExpenseScreen()),
           );
         },
-        label: const Text('Add Expense'),
-        icon: const Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, double total, User user, int count) {
+      BuildContext context, double income, double expense, User user, int count, UserModel? profile) {
+    final currency = profile?.currencyCode ?? r'$';
+    final name = profile?.name ?? (user.displayName ?? user.email ?? 'My Account');
+    final balance = income - expense;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -143,9 +205,7 @@ class HomeScreen extends StatelessWidget {
                   color: Colors.white70, size: 18),
               const SizedBox(width: 6),
               Text(
-                user.displayName?.isNotEmpty == true
-                    ? user.displayName!
-                    : user.email ?? 'My Account',
+                name,
                 style:
                     const TextStyle(color: Colors.white70, fontSize: 13),
               ),
@@ -153,172 +213,216 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Total Spending',
+            'Total Balance',
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 4),
           Text(
-            '\$${total.toStringAsFixed(2)}',
+            '$currency ${balance.toStringAsFixed(2)}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 38,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '$count expense${count == 1 ? '' : 's'} recorded',
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSummaryItem('Income', income, Icons.arrow_upward, Colors.greenAccent),
+              _buildSummaryItem('Expense', expense, Icons.arrow_downward, Colors.orangeAccent),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildExpenseCard(
-      BuildContext context, Expense expense, ExpenseRepository repository) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: CircleAvatar(
-          backgroundColor:
-              Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(
-            _getIconForCategory(expense.category),
-            color: Theme.of(context).colorScheme.primary,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          expense.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${expense.category} • ${DateFormat('MMM dd, yyyy').format(expense.date)}',
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildSummaryItem(String label, double amount, IconData icon, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(
-              '\$${expense.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            Icon(icon, color: color, size: 14),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right,
-                color: Colors.grey.shade400, size: 18),
+            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ],
         ),
-        onLongPress: () =>
-            _showDeleteDialog(context, repository, expense),
-      ),
+        Text(
+          amount.toStringAsFixed(2),
+          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 64, color: Colors.grey.shade400),
+          const Text('✨', style: TextStyle(fontSize: 64)),
           const SizedBox(height: 16),
           Text(
-            'No expenses yet',
-            style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500),
+            'No transactions yet',
+            style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
-            'Tap "Add Expense" to get started',
-            style:
-                TextStyle(fontSize: 13, color: Colors.grey.shade400),
+            'Tap the + button to add one!',
+            style: TextStyle(color: Colors.grey[500]),
           ),
         ],
       ),
     );
   }
+}
 
-  IconData _getIconForCategory(String category) {
-    switch (category) {
-      case 'Food':
-        return Icons.restaurant;
-      case 'Transport':
-        return Icons.directions_bus;
-      case 'Rent':
-        return Icons.home;
-      case 'Entertainment':
-        return Icons.movie;
-      default:
-        return Icons.attach_money;
+class TransactionCard extends StatefulWidget {
+  final Expense expense;
+  final ExpenseRepository repository;
+  final String currency;
+  final UserModel? profile;
+
+  const TransactionCard({
+    super.key,
+    required this.expense,
+    required this.repository,
+    required this.currency,
+    this.profile,
+  });
+
+  @override
+  State<TransactionCard> createState() => _TransactionCardState();
+}
+
+class _TransactionCardState extends State<TransactionCard> {
+  bool _isExpanded = false;
+
+  String _getEmoji(String category, UserModel? profile) {
+    if (profile != null) {
+      if (profile.customExpenseCategories.containsKey(category)) {
+        return profile.customExpenseCategories[category]!;
+      }
+      if (profile.customIncomeCategories.containsKey(category)) {
+        return profile.customIncomeCategories[category]!;
+      }
     }
+    final Map<String, String> emojiMap = {
+      'Food': '🍕', 'Transport': '🚌', 'Rent': '🏠', 'Leisure': '🎮',
+      'Health': '🏥', 'Shopping': '🛍️', 'Travel': '✈️', 'Bills': '📄',
+      'Salary': '💰', 'Freelance': '💻', 'Investment': '📈', 'Gift': '🎁',
+      'Refund': '🔄', 'Sales': '🏷️', 'Bonus': '🎊', 'Rental': '🔑', 'Others': '✨',
+    };
+    return emojiMap[category] ?? '✨';
   }
 
-  void _confirmSignOut(BuildContext context, AuthService authService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await authService.signOut();
-              // StreamBuilder in main.dart auto-navigates to LoginScreen
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+  @override
+  Widget build(BuildContext context) {
+    final expense = widget.expense;
+    return GestureDetector(
+      onTap: () => setState(() => _isExpanded = !_isExpanded),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(_isExpanded ? 20 : 10),
+              blurRadius: _isExpanded ? 12 : 8,
+              offset: Offset(0, _isExpanded ? 4 : 2),
             ),
-            child: const Text('Sign Out'),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          children: [
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: expense.isIncome 
+                      ? const Color(0xFF6DE8C3).withAlpha(40) 
+                      : const Color(0xFFFF9B9B).withAlpha(40),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(_getEmoji(expense.category, widget.profile), style: const TextStyle(fontSize: 24)),
+                ),
+              ),
+              title: Text(expense.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              subtitle: Text(DateFormat('MMM dd, hh:mm a').format(expense.date), style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${expense.isIncome ? '+' : '-'} ${widget.currency} ${expense.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16,
+                      color: expense.isIncome ? Colors.green[700] : Colors.red[700],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(expense.category, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                ],
+              ),
+            ),
+            if (_isExpanded)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddExpenseScreen(expenseToEdit: expense),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      label: const Text('Edit'),
+                      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.primary),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        _showDeleteDialog(context, widget.repository, expense);
+                      },
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      label: const Text('Delete'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  void _showDeleteDialog(
-      BuildContext context, ExpenseRepository repository, Expense expense) {
+  void _showDeleteDialog(BuildContext context, ExpenseRepository repository, Expense expense) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Expense'),
-        content:
-            Text('Are you sure you want to delete "${expense.name}"?'),
+        title: const Text('Delete Transaction?'),
+        content: Text('Are you sure you want to delete "${expense.name}"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               repository.deleteExpense(expense.id!);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Colors.redAccent, foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Delete'),
           ),
