@@ -5,12 +5,27 @@ import '../repositories/expense_repository.dart';
 import 'add_expense_screen.dart';
 import 'edit_expense_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late final ExpenseRepository _repository;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository =
+        ExpenseRepository(); // Singleton pattern - always returns same instance
+    debugPrint('HomeScreen initialized with repository');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repository = ExpenseRepository();
+    final repository = _repository;
 
     return Scaffold(
       appBar: AppBar(
@@ -21,16 +36,40 @@ class HomeScreen extends StatelessWidget {
       body: StreamBuilder<List<Expense>>(
         stream: repository.getExpenses(),
         builder: (context, snapshot) {
+          debugPrint('StreamBuilder state: ${snapshot.connectionState}');
+          debugPrint('StreamBuilder error: ${snapshot.error}');
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            debugPrint('Full error: ${snapshot.error}');
+            debugPrint('Stack trace: ${snapshot.stackTrace}');
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Error: ${snapshot.error}'),
+                  ],
+                ),
+              ),
+            );
           }
 
           final expenses = snapshot.data ?? [];
-          final totalAmount = expenses.fold(0.0, (sum, item) => sum + item.amount);
+          final totalAmount = expenses.fold(
+            0.0,
+            (sum, item) => sum + item.amount,
+          );
 
           return Column(
             children: [
@@ -53,43 +92,84 @@ class HomeScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final expense = expenses[index];
                           return Dismissible(
-                            key: ValueKey(expense.id),
+                            key: ValueKey(expense.id ?? UniqueKey()),
                             direction: DismissDirection.endToStart,
-                            confirmDismiss: (direction) {
-                              return _showDeleteConfirmation(
-                                context,
-                                repository,
-                                expense,
-                              );
+                            confirmDismiss: (direction) async {
+                              final shouldDelete =
+                                  await _showDeleteConfirmation(
+                                    context,
+                                    repository,
+                                    expense,
+                                  );
+                              if (shouldDelete == true && expense.id != null) {
+                                try {
+                                  await repository.deleteExpense(expense.id!);
+                                  return true;
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Delete failed: $e'),
+                                      ),
+                                    );
+                                  }
+                                  return false;
+                                }
+                              }
+                              return false;
                             },
                             background: Container(
                               margin: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               alignment: Alignment.centerRight,
                               decoration: BoxDecoration(
                                 color: Colors.red.shade600,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.delete, color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: const [
+                                  Icon(Icons.delete, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             child: Card(
                               margin: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  child: Icon(_getIconForCategory(expense.category)),
+                                  child: Icon(
+                                    _getIconForCategory(expense.category),
+                                  ),
                                 ),
                                 title: Text(expense.name),
                                 subtitle: Text(
-                                    '${expense.category} • ${DateFormat('MMM dd, yyyy').format(expense.date)}'),
+                                  '${expense.category} • ${DateFormat('MMM dd, yyyy').format(expense.date)}',
+                                ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       '\$${expense.amount.toStringAsFixed(2)}',
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold, fontSize: 16),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     IconButton(
@@ -99,9 +179,10 @@ class HomeScreen extends StatelessWidget {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => EditExpenseScreen(
-                                              expense: expense,
-                                            ),
+                                            builder: (context) =>
+                                                EditExpenseScreen(
+                                                  expense: expense,
+                                                ),
                                           ),
                                         );
                                       },
@@ -151,7 +232,9 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withAlpha(77), // 0.3 * 255 ≈ 77
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withAlpha(77), // 0.3 * 255 ≈ 77
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -240,9 +323,15 @@ class HomeScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 12),
-                _buildDetailRow('Amount', '\$${expense.amount.toStringAsFixed(2)}'),
+                _buildDetailRow(
+                  'Amount',
+                  '\$${expense.amount.toStringAsFixed(2)}',
+                ),
                 _buildDetailRow('Category', expense.category),
-                _buildDetailRow('Date', DateFormat('MMM dd, yyyy').format(expense.date)),
+                _buildDetailRow(
+                  'Date',
+                  DateFormat('MMM dd, yyyy').format(expense.date),
+                ),
                 _buildDetailRow(
                   'Description',
                   expense.description.trim().isEmpty
@@ -258,7 +347,8 @@ class HomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EditExpenseScreen(expense: expense),
+                          builder: (context) =>
+                              EditExpenseScreen(expense: expense),
                         ),
                       );
                     },
@@ -280,10 +370,7 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(value),
         ],
